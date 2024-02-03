@@ -26,12 +26,9 @@ Window::Window(const std::uint32_t width, const std::uint32_t height, const std:
   }
   spdlog::debug("GLFW initialized");
 
-  // Set OpenGL version to 3.3
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
-  // Need for macOS support
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+  // Set OpenGL version to 4.5
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
 
   // Use OpenGL Core Profile
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -65,6 +62,10 @@ Window::Window(const std::uint32_t width, const std::uint32_t height, const std:
     throw WindowException {"GLEW failed to initialize"};
   }
   spdlog::debug("GLEW initialized");
+
+  if (GLEW_ARB_gl_spirv) {
+    spdlog::info("GLEW_ARB_gl_spirv supported!");
+  }
 
   spdlog::debug("Vendor: {}", reinterpret_cast<const char *>(glGetString(GL_VENDOR)));
   spdlog::debug("Renderer: {}", reinterpret_cast<const char *>(glGetString(GL_RENDERER)));

@@ -2,7 +2,9 @@
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
+#include <fstream>
 #include <memory>
+#include <vector>
 
 #include "window.h"
 
@@ -39,9 +41,18 @@ int main(int argc, char **argv) {
         "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
         "}\n\0";
 
+    std::ifstream vertex_shader_file("shaders/basic.vert.spv", std::ios::binary);
+    std::ifstream fragment_shader_file("shaders/basic.frag.spv", std::ios::binary);
+
+    std::vector<char> vertex_shader_buffer((std::istreambuf_iterator<char>(vertex_shader_file)),
+                                           (std::istreambuf_iterator<char>()));
+    std::vector<char> fragment_shader_buffer((std::istreambuf_iterator<char>(fragment_shader_file)),
+                                             (std::istreambuf_iterator<char>()));
+
     GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertexShaderSource, nullptr);
-    glCompileShader(vertex_shader);
+    glShaderBinary(1, &vertex_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, vertex_shader_buffer.data(),
+                   vertex_shader_buffer.size());
+    glSpecializeShader(vertex_shader, "main", 0, nullptr, nullptr);
     GLint success;
     char info_log[512];
     glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
@@ -51,8 +62,9 @@ int main(int argc, char **argv) {
     }
 
     GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragmentShaderSource, nullptr);
-    glCompileShader(fragment_shader);
+    glShaderBinary(1, &fragment_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, fragment_shader_buffer.data(),
+                   fragment_shader_buffer.size());
+    glSpecializeShader(fragment_shader, "main", 0, nullptr, nullptr);
     glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
     if (!success) {
       glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
