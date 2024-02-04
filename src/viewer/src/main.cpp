@@ -3,16 +3,14 @@
 #include <spdlog/spdlog.h>
 
 #include <cstdint>
-
-#include "shader_program.h"
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 #include <fstream>
 #include <memory>
 #include <vector>
 
+#include "image.h"
 #include "shader.h"
+#include "shader_program.h"
+#include "texture.h"
 #include "window.h"
 
 int main(int argc, char **argv) {
@@ -74,32 +72,20 @@ int main(int argc, char **argv) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    viewer::Texture texture;
+    texture.SetWrapping(viewer::Texture::Wrapping::kRepeat, viewer::Texture::Wrapping::kRepeat);
+    texture.SetFilters(viewer::Texture::Filter::kNearest, viewer::Texture::Filter::kNearest);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                    GL_REPEAT);  // set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    // set texture filtering parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, ch;
-    unsigned char *data = stbi_load("textures/wall.jpg", &width, &height, &ch, 0);
-    if (data) {
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-      glGenerateMipmap(GL_TEXTURE_2D);
-    } else {
-      spdlog::error("Failed to load texture");
+    {
+      viewer::Image wall {"textures/wall.jpg"};
+      texture.SetImage(wall);
     }
-    stbi_image_free(data);
 
     while (!window->ShouldClose()) {
       glClearColor(0.2, 0.3, 0.3, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-      glBindTexture(GL_TEXTURE_2D, texture);
+      texture.Bind();
       program.Use();
       glBindVertexArray(vao);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
