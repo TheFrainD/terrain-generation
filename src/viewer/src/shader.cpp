@@ -20,7 +20,7 @@ Shader::Shader(const Type type, const std::vector<std::uint8_t> binary)
 
 Shader::~Shader() { Release(); }
 
-Shader::Shader(Shader &&other) noexcept : id_(other.id_) { other.id_ = 0; }
+Shader::Shader(Shader &&other) : id_(other.id_) { other.id_ = 0; }
 
 Shader &Shader::operator=(Shader &&other) noexcept {
   if (this != &other) {

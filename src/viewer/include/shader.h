@@ -21,8 +21,8 @@ public:
   Shader(const Shader &)            = delete;
   Shader &operator=(const Shader &) = delete;
 
-  Shader(Shader &&) noexcept;
-  Shader &operator=(Shader &&) noexcept;
+  Shader(Shader &&other);
+  Shader &operator=(Shader &&other) noexcept;
 
   std::uint32_t GetId() const noexcept;
 

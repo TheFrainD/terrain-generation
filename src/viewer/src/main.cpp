@@ -3,6 +3,8 @@
 #include <spdlog/spdlog.h>
 
 #include <cstdint>
+
+#include "shader_program.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -38,22 +40,15 @@ int main(int argc, char **argv) {
     std::vector<std::uint8_t> fragment_shader_buffer((std::istreambuf_iterator<char>(fragment_shader_file)),
                                                      (std::istreambuf_iterator<char>()));
 
-    GLuint program = glCreateProgram();
+    viewer::ShaderProgram program;
 
     {
       viewer::Shader vertex_shader {viewer::Shader::Type::kVertex, vertex_shader_buffer};
       viewer::Shader fragment_shader {viewer::Shader::Type::kFragment, fragment_shader_buffer};
 
-      glAttachShader(program, vertex_shader.GetId());
-      glAttachShader(program, fragment_shader.GetId());
-      glLinkProgram(program);
-      GLint success;
-      char info_log[512];
-      glGetProgramiv(program, GL_LINK_STATUS, &success);
-      if (!success) {
-        glGetProgramInfoLog(program, 512, nullptr, info_log);
-        spdlog::error("Linking error: {}", info_log);
-      }
+      program.Attach(vertex_shader);
+      program.Attach(fragment_shader);
+      program.Link();
     }
 
     GLuint vao;
@@ -105,7 +100,7 @@ int main(int argc, char **argv) {
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       glBindTexture(GL_TEXTURE_2D, texture);
-      glUseProgram(program);
+      program.Use();
       glBindVertexArray(vao);
       glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
       glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -116,7 +111,6 @@ int main(int argc, char **argv) {
 
     glDeleteVertexArrays(1, &vao);
     glDeleteBuffers(1, &vbo);
-    glDeleteProgram(program);
   } catch (const viewer::WindowException &ex) {
     spdlog::error("Window error: {}", ex.what());
     return -1;
