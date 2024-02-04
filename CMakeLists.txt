@@ -20,6 +20,8 @@ conan_cmake_configure(
   glfw/3.3.8
   glew/2.2.0
   spdlog/1.11.0
+  stb/cci.20220909
+  glm/0.9.5.4
   GENERATORS cmake_find_package)
 
 conan_cmake_autodetect(settings)

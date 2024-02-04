@@ -12,8 +12,10 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(glm REQUIRED)
+find_package(stb REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE glfw GLEW::GLEW spdlog::spdlog)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw GLEW::GLEW spdlog::spdlog glm::glm stb::stb)
 
 # Compile GLSL shaders to SPIR-V
 
@@ -41,3 +43,4 @@ add_dependencies(${PROJECT_NAME} shaders)
 
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_SOURCE_DIR}/bin)
 install(DIRECTORY ${PROJECT_BINARY_DIR}/shaders DESTINATION ${CMAKE_SOURCE_DIR}/bin)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/textures DESTINATION ${CMAKE_SOURCE_DIR}/bin)
