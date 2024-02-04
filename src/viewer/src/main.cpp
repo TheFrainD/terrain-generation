@@ -11,6 +11,8 @@
 #include "shader.h"
 #include "shader_program.h"
 #include "texture.h"
+#include "vertex_array.h"
+#include "vertex_buffer.h"
 #include "window.h"
 
 int main(int argc, char **argv) {
@@ -49,28 +51,13 @@ int main(int argc, char **argv) {
       program.Link();
     }
 
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    viewer::VertexArray vao;
 
-    GLuint vbo;
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    viewer::VertexBuffer vbo {vertices, sizeof(vertices)};
+    viewer::VertexBuffer ebo {indices, sizeof(indices)};
 
-    GLuint ebo;
-    glGenBuffers(1, &ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vao.BindAttribute(vbo, 0, 3, viewer::VertexArray::DataType::kFloat, 5 * sizeof(float), 0);
+    vao.BindAttribute(vbo, 1, 2, viewer::VertexArray::DataType::kFloat, 5 * sizeof(float), 3 * sizeof(float));
 
     viewer::Texture texture;
     texture.SetWrapping(viewer::Texture::Wrapping::kRepeat, viewer::Texture::Wrapping::kRepeat);
@@ -87,16 +74,15 @@ int main(int argc, char **argv) {
 
       texture.Bind();
       program.Use();
-      glBindVertexArray(vao);
-      glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+      vao.Bind();
+      ebo.Bind(viewer::VertexBuffer::Target::kElementArrayBuffer);
       glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+      vao.Unbind();
+      ebo.Unbind(viewer::VertexBuffer::Target::kElementArrayBuffer);
 
       window->SwapBuffer();
       viewer::Window::PollEvents();
     }
-
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
   } catch (const viewer::WindowException &ex) {
     spdlog::error("Window error: {}", ex.what());
     return -1;
