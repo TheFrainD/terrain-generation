@@ -1,6 +1,8 @@
 #include <GL/glew.h>
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
+
+#include <cstdint>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -8,6 +10,7 @@
 #include <memory>
 #include <vector>
 
+#include "shader.h"
 #include "window.h"
 
 int main(int argc, char **argv) {
@@ -30,45 +33,28 @@ int main(int argc, char **argv) {
     std::ifstream vertex_shader_file("shaders/basic.vert.spv", std::ios::binary);
     std::ifstream fragment_shader_file("shaders/basic.frag.spv", std::ios::binary);
 
-    std::vector<char> vertex_shader_buffer((std::istreambuf_iterator<char>(vertex_shader_file)),
-                                           (std::istreambuf_iterator<char>()));
-    std::vector<char> fragment_shader_buffer((std::istreambuf_iterator<char>(fragment_shader_file)),
-                                             (std::istreambuf_iterator<char>()));
-
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderBinary(1, &vertex_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, vertex_shader_buffer.data(),
-                   vertex_shader_buffer.size());
-    glSpecializeShader(vertex_shader, "main", 0, nullptr, nullptr);
-    GLint success;
-    char info_log[512];
-    glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-      glGetShaderInfoLog(vertex_shader, 512, nullptr, info_log);
-      spdlog::error("Vertex compile error: {}", info_log);
-    }
-
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderBinary(1, &fragment_shader, GL_SHADER_BINARY_FORMAT_SPIR_V, fragment_shader_buffer.data(),
-                   fragment_shader_buffer.size());
-    glSpecializeShader(fragment_shader, "main", 0, nullptr, nullptr);
-    glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-      glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
-      spdlog::error("Fragment compile error: {}", info_log);
-    }
+    std::vector<std::uint8_t> vertex_shader_buffer((std::istreambuf_iterator<char>(vertex_shader_file)),
+                                                   (std::istreambuf_iterator<char>()));
+    std::vector<std::uint8_t> fragment_shader_buffer((std::istreambuf_iterator<char>(fragment_shader_file)),
+                                                     (std::istreambuf_iterator<char>()));
 
     GLuint program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-      glGetProgramInfoLog(program, 512, nullptr, info_log);
-      spdlog::error("Linking error: {}", info_log);
-    }
 
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    {
+      viewer::Shader vertex_shader {viewer::Shader::Type::kVertex, vertex_shader_buffer};
+      viewer::Shader fragment_shader {viewer::Shader::Type::kFragment, fragment_shader_buffer};
+
+      glAttachShader(program, vertex_shader.GetId());
+      glAttachShader(program, fragment_shader.GetId());
+      glLinkProgram(program);
+      GLint success;
+      char info_log[512];
+      glGetProgramiv(program, GL_LINK_STATUS, &success);
+      if (!success) {
+        glGetProgramInfoLog(program, 512, nullptr, info_log);
+        spdlog::error("Linking error: {}", info_log);
+      }
+    }
 
     GLuint vao;
     glGenVertexArrays(1, &vao);
